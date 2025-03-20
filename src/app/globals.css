@@ -40,3 +40,20 @@ a {
     color-scheme: dark;
   }
 }
+
+:root {
+  --background: #ffffff;
+  --text: #000000;
+  --primary: #007bff;
+}
+
+.dark {
+  --background: #181818;
+  --text: #ffffff;
+  --primary: #1e90ff;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text);
+}
