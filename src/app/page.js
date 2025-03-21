@@ -1,6 +1,5 @@
 "use client";
-import * as React from "react";
-import PropTypes from "prop-types";
+import React, { useState, useEffect } from "react";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -14,13 +13,21 @@ import Chats from "@/components/chats/chats";
 
 const drawerWidth = 360;
 
-function Home(props) {
-  const { window } = props;
+function Home() {
   const [mobileOpen, setMobileOpen] = React.useState(false);
-
+  const [selectedChatId, setSelectedChatId] = useState(null);
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
+
+  const handleSelectChat = (chatId) => {
+    console.log("🔍 Вибраний chatId:", chatId);
+    setSelectedChatId(chatId);
+  };
+
+  useEffect(() => {
+    console.log("🛠 ChatId змінився:", selectedChatId);
+  }, [selectedChatId]);
 
   return (
     <Box sx={{ display: "flex", height: "100vh", flexDirection: "column" }}>
@@ -61,7 +68,7 @@ function Home(props) {
         component="nav"
         sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
       >
-        <Chats />
+        <Chats onSelectChat={handleSelectChat} />
       </Box>
       <Box
         component="main"
@@ -76,7 +83,7 @@ function Home(props) {
           pt: "128px",
         }}
       >
-        <Chat />
+        {selectedChatId && <Chat chatId={selectedChatId} />}
       </Box>
     </Box>
   );

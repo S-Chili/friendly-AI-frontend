@@ -1,5 +1,5 @@
 "use client";
-import * as React from "react";
+import React, { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
 import Divider from "@mui/material/Divider";
@@ -10,29 +10,58 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Toolbar from "@mui/material/Toolbar";
 import ChatIcon from "@mui/icons-material/Chat";
+import { fetchChats, createChat } from "@/api/chatApi";
 
 const drawerWidth = 360;
 
-export default function Chats(props) {
-  const { window } = props;
-  const [mobileOpen, setMobileOpen] = React.useState(false);
+export default function Chats({ onSelectChat }) {
+  if (!onSelectChat) {
+    console.error("❌ onSelectChat не передано в Chats!");
+  }
 
+  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [chats, setChats] = useState([]);
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  useEffect(() => {
+    const loadChats = async () => {
+      const data = await fetchChats();
+      setChats(data);
+    };
+    loadChats();
+  }, []);
+
+  const handleCreateChat = async () => {
+    const newChat = await createChat();
+    setChats((prev) => [...prev, newChat]);
+  };
+
+  const handleChatClick = (chatId) => {
+    console.log("📢 Клік по чату:", chatId);
+    if (onSelectChat) {
+      onSelectChat(chatId);
+    } else {
+      console.error("❌ onSelectChat не передано!");
+    }
   };
 
   const drawer = (
     <div>
       <Toolbar />
       <Divider />
+      <ListItemButton variant="contained" onClick={handleCreateChat}>
+        Новий чат
+      </ListItemButton>
       <List>
-        {["Chat1", "Chat2", "Chat3"].map((text, index) => (
-          <ListItem key={text} disablePadding>
-            <ListItemButton>
+        {chats.map((chat) => (
+          <ListItem key={chat._id} disablePadding>
+            <ListItemButton onClick={() => handleChatClick(chat._id)}>
               <ListItemIcon>
                 <ChatIcon />
               </ListItemIcon>
-              <ListItemText primary={text} />
+              <ListItemText primary={chat.name} />
             </ListItemButton>
           </ListItem>
         ))}
@@ -40,16 +69,12 @@ export default function Chats(props) {
     </div>
   );
 
-  const container =
-    window !== undefined ? () => window().document.body : undefined;
-
   return (
     <Box
       component="nav"
       sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
     >
       <Drawer
-        container={container}
         variant="temporary"
         open={mobileOpen}
         onClose={handleDrawerToggle}
@@ -78,8 +103,4 @@ export default function Chats(props) {
       </Drawer>
     </Box>
   );
-
-  Home.propTypes = {
-    window: PropTypes.func,
-  };
 }

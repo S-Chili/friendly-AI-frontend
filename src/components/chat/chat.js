@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Box, TextField, IconButton, Paper, Typography } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
+import { fetchMessages, sendMessage } from "@/api/chatApi";
 
-export default function Chat() {
-  const [messages, setMessages] = useState([
-    { text: "Привіт! Як справи?", sender: "bot" },
-    { text: "Привіт! Все добре, а у тебе?", sender: "user" },
-  ]);
+export default function Chat({ chatId }) {
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef(null);
 
@@ -14,18 +12,44 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = () => {
-    if (input.trim() === "") return;
+  useEffect(() => {
+    if (chatId) {
+      console.log("🔄 Завантаження повідомлень для:", chatId);
+      fetchMessages(chatId).then((data) => {
+        console.log("📨 Отримані повідомлення:", data);
+        setMessages(
+          data.flatMap((msg) =>
+            [
+              { text: msg.userMessage, sender: "user" },
+              { text: msg.botResponse, sender: "bot" },
+            ].filter((m) => m.text)
+          ) // Видаляємо пусті повідомлення
+        );
+      });
+    }
+  }, [chatId]);
 
-    setMessages((prev) => [...prev, { text: input, sender: "user" }]);
-    setInput("");
+  const handleSendMessage = async () => {
+    if (!chatId || !input.trim()) {
+      alert("Виберіть чат і введіть повідомлення!");
+      return;
+    }
 
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { text: "Це авто-відповідь 😊", sender: "bot" },
-      ]);
-    }, 1000);
+    const newUserMessage = { text: input, sender: "user" };
+    setMessages((prev) => [...prev, newUserMessage]); // Додаємо повідомлення одразу
+    setInput(""); // Очищаємо поле вводу
+
+    try {
+      const response = await sendMessage(chatId, input);
+      console.log("🤖 Відповідь бота:", response);
+
+      const botReply = response?.response; // Беремо правильне поле
+      if (botReply) {
+        setMessages((prev) => [...prev, { text: botReply, sender: "bot" }]);
+      }
+    } catch (error) {
+      console.error("❌ Помилка надсилання повідомлення:", error);
+    }
   };
 
   return (
@@ -67,9 +91,9 @@ export default function Chat() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Напишіть повідомлення..."
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
+          onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
         />
-        <IconButton color="primary" onClick={handleSend}>
+        <IconButton color="primary" onClick={handleSendMessage}>
           <SendIcon />
         </IconButton>
       </Box>
