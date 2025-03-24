@@ -10,9 +10,12 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Toolbar from "@mui/material/Toolbar";
 import ChatIcon from "@mui/icons-material/Chat";
-import { fetchChats, createChat } from "@/api/chatApi";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import AddCommentIcon from "@mui/icons-material/AddComment";
+import { fetchChats, createChat, deleteChat } from "@/api/chatApi";
+import { IconButton } from "@mui/material";
 
-const drawerWidth = 360;
+const drawerWidth = 300;
 
 export default function Chats({ onSelectChat }) {
   if (!onSelectChat) {
@@ -38,6 +41,18 @@ export default function Chats({ onSelectChat }) {
     setChats((prev) => [...prev, newChat]);
   };
 
+  const handleDeleteChat = async (chatId) => {
+    if (!chatId) {
+      console.error("❌ chatId не може бути undefined!");
+      return;
+    }
+
+    console.log("🗑 Видалення чату:", chatId);
+
+    await deleteChat(chatId);
+    setChats((prev) => prev.filter((chat) => chat._id !== chatId));
+  };
+
   const handleChatClick = (chatId) => {
     console.log("📢 Клік по чату:", chatId);
     if (onSelectChat) {
@@ -51,8 +66,12 @@ export default function Chats({ onSelectChat }) {
     <div>
       <Toolbar />
       <Divider />
-      <ListItemButton variant="contained" onClick={handleCreateChat}>
-        Новий чат
+      <ListItemButton
+        variant="contained"
+        style={{ justifyContent: "end" }}
+        onClick={handleCreateChat}
+      >
+        <AddCommentIcon style={{ color: "#919090" }} />
       </ListItemButton>
       <List>
         {chats.map((chat) => (
@@ -63,6 +82,12 @@ export default function Chats({ onSelectChat }) {
               </ListItemIcon>
               <ListItemText primary={chat.name} />
             </ListItemButton>
+            <IconButton
+              sx={{ paddingRight: 2 }}
+              onClick={() => handleDeleteChat(chat._id)}
+            >
+              <DeleteOutlineIcon style={{ color: "#919090" }} />
+            </IconButton>
           </ListItem>
         ))}
       </List>

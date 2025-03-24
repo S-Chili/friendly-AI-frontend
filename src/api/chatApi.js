@@ -28,3 +28,13 @@ export const sendMessage = async (chatId, message) => {
   const response = await api.post("/chat", { chatId, message });
   return response.data;
 };
+
+export const deleteChat = async (chatId) => {
+  if (!chatId) {
+    throw new Error("❌ chatId не може бути undefined!");
+  }
+  console.log("🗑 Видалення чату:", chatId);
+
+  const response = await api.delete(`/chats/${chatId}`);
+  return response.data;
+};

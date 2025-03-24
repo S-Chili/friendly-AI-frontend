@@ -11,7 +11,7 @@ import IconButton from "@mui/material/IconButton";
 import ThemeSwitcher from "@/styles/ThemeSwitcher";
 import Chats from "@/components/chats/chats";
 
-const drawerWidth = 360;
+const drawerWidth = 300;
 
 function Home() {
   const [mobileOpen, setMobileOpen] = React.useState(false);
