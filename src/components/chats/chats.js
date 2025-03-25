@@ -17,16 +17,16 @@ import { IconButton } from "@mui/material";
 
 const drawerWidth = 300;
 
-export default function Chats({ onSelectChat }) {
+export default function Chats({
+  onSelectChat,
+  mobileOpen,
+  handleDrawerToggle,
+}) {
   if (!onSelectChat) {
     console.error("❌ onSelectChat не передано в Chats!");
   }
 
-  const [mobileOpen, setMobileOpen] = React.useState(false);
   const [chats, setChats] = useState([]);
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
 
   useEffect(() => {
     const loadChats = async () => {
@@ -59,6 +59,10 @@ export default function Chats({ onSelectChat }) {
       onSelectChat(chatId);
     } else {
       console.error("❌ onSelectChat не передано!");
+    }
+
+    if (mobileOpen) {
+      handleDrawerToggle();
     }
   };
 
@@ -102,7 +106,7 @@ export default function Chats({ onSelectChat }) {
       <Drawer
         variant="temporary"
         open={mobileOpen}
-        onClose={handleDrawerToggle}
+        onClose={handleDrawerToggle} // Закриття при натисканні на фон
         sx={{
           display: { xs: "block", sm: "none" },
           "& .MuiDrawer-paper": {
@@ -113,6 +117,7 @@ export default function Chats({ onSelectChat }) {
       >
         {drawer}
       </Drawer>
+
       <Drawer
         variant="permanent"
         sx={{

@@ -68,7 +68,11 @@ function Home() {
         component="nav"
         sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
       >
-        <Chats onSelectChat={handleSelectChat} />
+        <Chats
+          onSelectChat={handleSelectChat}
+          mobileOpen={mobileOpen}
+          handleDrawerToggle={handleDrawerToggle}
+        />
       </Box>
       <Box
         component="main"
