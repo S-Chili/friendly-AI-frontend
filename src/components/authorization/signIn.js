@@ -13,14 +13,16 @@ import Link from "next/link";
 
 export default function SignIn() {
   return (
-    <Box sx={{ width: "100%", height: "100%" }}>
-      <Image
-        src="/overhead-view-monstera-leaves-pink-background.jpg"
-        alt="Hero image"
-        layout="fill"
-        objectFit="cover"
-        style={{ opacity: 0.3 }}
-      />
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        width: "100%",
+        minHeight: "100vh",
+        background:
+          "linear-gradient(135deg, #FFB6C1,rgb(222, 192, 255), #ADD8E6)",
+      }}
+    >
       <Box
         sx={{
           display: "flex",
@@ -29,7 +31,7 @@ export default function SignIn() {
           marginTop: "150px",
         }}
       >
-        <Avatar sx={{ m: 1, bgcolor: "#FFCCE5" }}>
+        <Avatar sx={{ m: 1, bgcolor: "#ADD8E6" }}>
           <LockOutlinedIcon />
         </Avatar>
         <Typography variant="h2" component="h2" sx={{ color: "GrayText" }}>

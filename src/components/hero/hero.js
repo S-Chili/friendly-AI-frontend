@@ -5,7 +5,7 @@ export default function Hero() {
   return (
     <Box sx={{ width: "100%", height: "100%" }}>
       <Image
-        src="/botanical-leaves копія.jpg"
+        src="/botanical-leaves.jpg"
         alt="Hero image"
         layout="fill"
         objectFit="cover"
