@@ -45,7 +45,11 @@ export default function Chat({ chatId }) {
 
       const botReply = response?.response; // Беремо правильне поле
       if (botReply) {
-        setMessages((prev) => [...prev, { text: botReply, sender: "bot" }]);
+        const botMessage = { text: botReply, sender: "bot" };
+        // ✅ Оновлюємо стан, додаючи повідомлення бота
+        setMessages((prev) => [...prev, botMessage]);
+      } else {
+        console.error("Помилка: Відповідь бота не отримана.");
       }
     } catch (error) {
       console.error("❌ Помилка надсилання повідомлення:", error);
