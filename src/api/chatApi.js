@@ -38,3 +38,21 @@ export const deleteChat = async (chatId) => {
   const response = await api.delete(`/chats/${chatId}`);
   return response.data;
 };
+
+// src/api/chatApi.js
+// Припустимо, що у вас є налаштований екземпляр axios з назвою `api`
+
+export const updateChatName = async (chatId, newName) => {
+  try {
+    const response = await api.put(`/chats/${chatId}`, {
+      newName,
+    });
+    // ✅ Повертаємо дані з властивості 'data'
+    return response.data;
+  } catch (error) {
+    console.error("❌ Помилка оновлення чату:", error);
+    throw new Error("Не вдалося оновити назву чату");
+  }
+};
+
+// ... інші функції
