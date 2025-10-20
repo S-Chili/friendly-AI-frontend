@@ -12,15 +12,21 @@ import Toolbar from "@mui/material/Toolbar";
 import ChatIcon from "@mui/icons-material/Chat";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import AddCommentIcon from "@mui/icons-material/AddComment";
-import EditIcon from "@mui/icons-material/Edit"; // ✅ Новий імпорт
-import DoneIcon from "@mui/icons-material/Done"; // ✅ Новий імпорт
+import EditIcon from "@mui/icons-material/Edit";
+import DoneIcon from "@mui/icons-material/Done";
 import {
   fetchChats,
   createChat,
   deleteChat,
   updateChatName,
-} from "@/api/chatApi"; // ✅ Оновлений імпорт
-import { IconButton, TextField } from "@mui/material"; // ✅ Оновлений імпорт
+} from "@/api/chatApi";
+import {
+  IconButton,
+  TextField,
+  CircularProgress,
+  Stack,
+  Typography,
+} from "@mui/material";
 
 const drawerWidth = 300;
 
@@ -28,27 +34,38 @@ export default function Chats({
   onSelectChat,
   mobileOpen,
   handleDrawerToggle,
+  selectedChatId,
 }) {
   if (!onSelectChat) {
     console.error("❌ onSelectChat не передано в Chats!");
   }
 
   const [chats, setChats] = useState([]);
-  const [isEditing, setIsEditing] = useState(false); // ✅ Стан для режиму редагування
-  const [editedChatId, setEditedChatId] = useState(null); // ✅ ID чату, що редагується
-  const [editedName, setEditedName] = useState(""); // ✅ Нова назва чату
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedChatId, setEditedChatId] = useState(null);
+  const [editedName, setEditedName] = useState("");
+  const [isSidebarLoading, setIsSidebarLoading] = useState(false);
 
   useEffect(() => {
     const loadChats = async () => {
-      const data = await fetchChats();
-      setChats(data);
+      setIsSidebarLoading(true);
+      try {
+        const data = await fetchChats();
+        setChats(data);
+      } catch (error) {
+        console.error("❌ Помилка завантаження чатів:", error);
+      } finally {
+        setIsSidebarLoading(false);
+      }
     };
+
     loadChats();
-  }, []);
+  }, [selectedChatId]);
 
   const handleCreateChat = async () => {
     const newChat = await createChat();
     setChats((prev) => [...prev, newChat]);
+    onSelectChat(newChat._id);
   };
 
   const handleDeleteChat = async (chatId) => {
@@ -59,10 +76,14 @@ export default function Chats({
     console.log("🗑 Видалення чату:", chatId);
     await deleteChat(chatId);
     setChats((prev) => prev.filter((chat) => chat._id !== chatId));
+
+    if (selectedChatId === chatId) {
+      onSelectChat(null);
+    }
   };
 
   const handleChatClick = (chatId) => {
-    if (isEditing) return; // ✅ Забороняємо перемикання чатів під час редагування
+    if (isEditing) return;
     console.log("📢 Клік по чату:", chatId);
     if (onSelectChat) {
       onSelectChat(chatId);
@@ -74,43 +95,101 @@ export default function Chats({
     }
   };
 
-  // ✅ Нова функція для перемикання в режим редагування
   const handleEditClick = (chat) => {
     setIsEditing(true);
     setEditedChatId(chat._id);
     setEditedName(chat.name);
   };
 
-  // ✅ Нова функція для збереження назви
   const handleSaveClick = async () => {
-    // ✅ Умова перевіряє, чи ім'я дійсно змінилося
     if (
       editedName.trim() &&
       editedName !== chats.find((c) => c._id === editedChatId)?.name
     ) {
       try {
         const updatedChat = await updateChatName(editedChatId, editedName);
-        // ✅ Оновлення стану chats
         setChats((prev) =>
-          prev.map(
-            (chat) => (chat._id === editedChatId ? updatedChat : chat) // Використовуємо оновлений об'єкт
-          )
+          prev.map((chat) => (chat._id === editedChatId ? updatedChat : chat))
         );
       } catch (error) {
         console.error("❌ Не вдалося оновити назву чату:", error);
       }
     }
-    // ✅ Завжди скидаємо стан редагування, незалежно від результату
     setIsEditing(false);
     setEditedChatId(null);
   };
 
-  // ✅ Нова функція для обробки натискань клавіш у полі введення
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       handleSaveClick();
     }
   };
+
+  const chatListContent = isSidebarLoading ? (
+    <Stack alignItems="center" sx={{ p: 2, pt: 5 }}>
+      <CircularProgress size={30} />
+      <Typography variant="body2" sx={{ mt: 1 }}>
+        Завантаження чатів...
+      </Typography>
+    </Stack>
+  ) : (
+    <List>
+      {chats.map((chat) => (
+        <ListItem
+          key={chat._id}
+          disablePadding
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            bgcolor:
+              selectedChatId === chat._id ? "action.selected" : "inherit",
+          }}
+        >
+          {isEditing && editedChatId === chat._id ? (
+            <TextField
+              variant="outlined"
+              size="small"
+              value={editedName}
+              onChange={(e) => setEditedName(e.target.value)}
+              onKeyDown={handleKeyDown}
+              sx={{ flexGrow: 1, my: 1, ml: 2 }}
+              autoFocus
+            />
+          ) : (
+            <ListItemButton
+              onClick={() => handleChatClick(chat._id)}
+              sx={{ flexGrow: 1 }}
+            >
+              <ListItemIcon>
+                <ChatIcon />
+              </ListItemIcon>
+              <ListItemText primary={chat.name} />
+            </ListItemButton>
+          )}
+          {isEditing && editedChatId === chat._id ? (
+            <IconButton onClick={handleSaveClick} sx={{ paddingRight: 2 }}>
+              <DoneIcon style={{ color: "green" }} />
+            </IconButton>
+          ) : (
+            <>
+              <IconButton
+                sx={{ paddingRight: 1 }}
+                onClick={() => handleEditClick(chat)}
+              >
+                <EditIcon style={{ color: "#919090" }} />
+              </IconButton>
+              <IconButton
+                sx={{ paddingRight: 2 }}
+                onClick={() => handleDeleteChat(chat._id)}
+              >
+                <DeleteOutlineIcon style={{ color: "#919090" }} />
+              </IconButton>
+            </>
+          )}
+        </ListItem>
+      ))}
+    </List>
+  );
 
   const drawer = (
     <div>
@@ -123,57 +202,7 @@ export default function Chats({
       >
         <AddCommentIcon style={{ color: "#919090" }} />
       </ListItemButton>
-      <List>
-        {chats.map((chat) => (
-          <ListItem
-            key={chat._id}
-            disablePadding
-            sx={{ display: "flex", alignItems: "center" }}
-          >
-            {isEditing && editedChatId === chat._id ? (
-              <TextField
-                variant="outlined"
-                size="small"
-                value={editedName}
-                onChange={(e) => setEditedName(e.target.value)}
-                onKeyDown={handleKeyDown}
-                sx={{ flexGrow: 1, my: 1, ml: 2 }}
-                autoFocus
-              />
-            ) : (
-              <ListItemButton
-                onClick={() => handleChatClick(chat._id)}
-                sx={{ flexGrow: 1 }}
-              >
-                <ListItemIcon>
-                  <ChatIcon />
-                </ListItemIcon>
-                <ListItemText primary={chat.name} />
-              </ListItemButton>
-            )}
-            {isEditing && editedChatId === chat._id ? (
-              <IconButton onClick={handleSaveClick} sx={{ paddingRight: 2 }}>
-                <DoneIcon style={{ color: "green" }} />
-              </IconButton>
-            ) : (
-              <>
-                <IconButton
-                  sx={{ paddingRight: 1 }}
-                  onClick={() => handleEditClick(chat)}
-                >
-                  <EditIcon style={{ color: "#919090" }} />
-                </IconButton>
-                <IconButton
-                  sx={{ paddingRight: 2 }}
-                  onClick={() => handleDeleteChat(chat._id)}
-                >
-                  <DeleteOutlineIcon style={{ color: "#919090" }} />
-                </IconButton>
-              </>
-            )}
-          </ListItem>
-        ))}
-      </List>
+      {chatListContent}
     </div>
   );
 

@@ -10,12 +10,91 @@ import MenuIcon from "@mui/icons-material/Menu";
 import IconButton from "@mui/material/IconButton";
 import ThemeSwitcher from "@/styles/ThemeSwitcher";
 import Chats from "@/components/chats/chats";
+import { createChat, sendMessage } from "@/api/chatApi"; // ✅ ADDED
+import {
+  Paper,
+  TextField,
+  Typography,
+  CircularProgress,
+  Stack,
+} from "@mui/material";
 
 const drawerWidth = 300;
+
+function InitialChatScreen({ onInitialMessage, isLoading }) {
+  const [input, setInput] = useState("");
+
+  const handleSend = () => {
+    if (input.trim() && !isLoading) {
+      onInitialMessage(input.trim());
+      setInput("");
+    }
+  };
+
+  const description = (
+    <>
+      <Typography variant="h5" component="h1" gutterBottom>
+        🤖 Вітаємо у Friendly AI Chatbot!
+      </Typography>
+      <Typography variant="body1" color="text.secondary" paragraph>
+        Я — ваш особистий помічник для швидкого отримання інформації.
+      </Typography>
+      <Typography variant="subtitle1" color="primary.main" gutterBottom>
+        Мої можливості:
+      </Typography>
+      <Typography
+        variant="body2"
+        component="ul"
+        sx={{ pl: 2, mb: 3, textAlign: "left" }}
+      >
+        <li>Перевірка погоди на сьогодні, завтра, післязавтра.</li>
+        <li>Відповіді на загальні запитання.</li>
+        <li>Підтримка розмови та жарти!</li>
+      </Typography>
+    </>
+  );
+
+  return (
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        textAlign: "center",
+        p: 3,
+      }}
+    >
+      <Paper elevation={3} sx={{ p: 4, maxWidth: 600, width: "100%" }}>
+        {description}
+        <Box sx={{ display: "flex", alignItems: "center", mt: 3 }}>
+          <TextField
+            fullWidth
+            variant="outlined"
+            size="small"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={
+              isLoading ? "Створення чату..." : "Введіть перше повідомлення..."
+            }
+            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            disabled={isLoading}
+          />
+          <IconButton color="primary" onClick={handleSend} disabled={isLoading}>
+            {isLoading ? <CircularProgress size={24} /> : <MenuIcon />}
+          </IconButton>
+        </Box>
+      </Paper>
+    </Box>
+  );
+}
 
 function Home() {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [selectedChatId, setSelectedChatId] = useState(null);
+  const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
@@ -23,6 +102,31 @@ function Home() {
   const handleSelectChat = (chatId) => {
     console.log("🔍 Вибраний chatId:", chatId);
     setSelectedChatId(chatId);
+  };
+
+  const handleInitialMessage = async (message) => {
+    setIsGlobalLoading(true); // ✅ START loading for initial chat creation
+
+    try {
+      // 1. Створення нового чату
+      const newChat = await createChat();
+      const newChatId = newChat._id;
+
+      // 2. Надсилання першого повідомлення
+      // NOTE: We don't wait for the sendMessage response here, relying on Chat component to fetch messages.
+      sendMessage(newChatId, message);
+
+      // 3. Активація нового чату
+      setSelectedChatId(newChatId);
+    } catch (error) {
+      console.error(
+        "❌ Помилка при створенні/надсиланні першого повідомлення:",
+        error
+      );
+      alert("Не вдалося створити чат. Перевірте з'єднання.");
+    } finally {
+      setIsGlobalLoading(false); // ✅ END loading
+    }
   };
 
   useEffect(() => {
@@ -72,6 +176,7 @@ function Home() {
           onSelectChat={handleSelectChat}
           mobileOpen={mobileOpen}
           handleDrawerToggle={handleDrawerToggle}
+          selectedChatId={selectedChatId}
         />
       </Box>
       <Box
@@ -87,7 +192,25 @@ function Home() {
           pt: "128px",
         }}
       >
-        {selectedChatId && <Chat chatId={selectedChatId} />}
+        {isGlobalLoading ? (
+          <Stack
+            alignItems="center"
+            justifyContent="center"
+            sx={{ height: "100%", mt: "-128px" }}
+          >
+            <CircularProgress size={60} />
+            <Typography variant="h6" sx={{ mt: 2 }}>
+              Створення першого чату...
+            </Typography>
+          </Stack>
+        ) : selectedChatId ? (
+          <Chat chatId={selectedChatId} />
+        ) : (
+          <InitialChatScreen
+            onInitialMessage={handleInitialMessage}
+            isLoading={isGlobalLoading}
+          />
+        )}
       </Box>
     </Box>
   );
