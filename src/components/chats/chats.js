@@ -60,7 +60,7 @@ export default function Chats({
     };
 
     loadChats();
-  }, [selectedChatId]);
+  }, []);
 
   const handleCreateChat = async () => {
     const newChat = await createChat();
