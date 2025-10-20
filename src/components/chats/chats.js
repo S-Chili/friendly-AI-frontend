@@ -60,11 +60,10 @@ export default function Chats({
     };
 
     loadChats();
-  }, []);
+  }, [selectedChatId]);
 
   const handleCreateChat = async () => {
     const newChat = await createChat();
-    setChats((prev) => [...prev, newChat]);
     onSelectChat(newChat._id);
   };
 

@@ -10,14 +10,8 @@ import MenuIcon from "@mui/icons-material/Menu";
 import IconButton from "@mui/material/IconButton";
 import ThemeSwitcher from "@/styles/ThemeSwitcher";
 import Chats from "@/components/chats/chats";
-import { createChat, sendMessage } from "@/api/chatApi"; // ✅ ADDED
-import {
-  Paper,
-  TextField,
-  Typography,
-  CircularProgress,
-  Stack,
-} from "@mui/material";
+import { createChat, sendMessage } from "@/api/chatApi";
+import { TextField, Typography, CircularProgress, Stack } from "@mui/material";
 
 const drawerWidth = 300;
 
@@ -66,7 +60,7 @@ function InitialChatScreen({ onInitialMessage, isLoading }) {
         p: 3,
       }}
     >
-      <Paper elevation={3} sx={{ p: 4, maxWidth: 600, width: "100%" }}>
+      <>
         {description}
         <Box sx={{ display: "flex", alignItems: "center", mt: 3 }}>
           <TextField
@@ -85,7 +79,7 @@ function InitialChatScreen({ onInitialMessage, isLoading }) {
             {isLoading ? <CircularProgress size={24} /> : <MenuIcon />}
           </IconButton>
         </Box>
-      </Paper>
+      </>
     </Box>
   );
 }
@@ -105,18 +99,14 @@ function Home() {
   };
 
   const handleInitialMessage = async (message) => {
-    setIsGlobalLoading(true); // ✅ START loading for initial chat creation
+    setIsGlobalLoading(true);
 
     try {
-      // 1. Створення нового чату
       const newChat = await createChat();
       const newChatId = newChat._id;
 
-      // 2. Надсилання першого повідомлення
-      // NOTE: We don't wait for the sendMessage response here, relying on Chat component to fetch messages.
-      sendMessage(newChatId, message);
+      await sendMessage(newChatId, message);
 
-      // 3. Активація нового чату
       setSelectedChatId(newChatId);
     } catch (error) {
       console.error(
@@ -125,7 +115,7 @@ function Home() {
       );
       alert("Не вдалося створити чат. Перевірте з'єднання.");
     } finally {
-      setIsGlobalLoading(false); // ✅ END loading
+      setIsGlobalLoading(false);
     }
   };
 
